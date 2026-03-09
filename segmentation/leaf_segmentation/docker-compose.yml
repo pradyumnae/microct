@@ -1,0 +1,13 @@
+services:
+  leaf-segmentation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: leaf-segmentation
+    volumes:
+      - .:/alsuser
+    ports:
+      - "8001:8001"
+    command: jupyter lab --ip=0.0.0.0 --port=8001 --no-browser --allow-root --NotebookApp.token=''
+    restart: unless-stopped

@@ -58,5 +58,5 @@ ENV VTK_DEFAULT_EGL_DEVICE=0
 
 # expected by entrypoint script
 RUN mkdir -p /alsuser /alsdata
-
+    
 WORKDIR /alsuser
