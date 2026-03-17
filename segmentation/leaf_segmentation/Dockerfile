@@ -1,45 +1,39 @@
-# Most of this is from: https://gitlab.com/NERSC/nersc-official-images/-/blob/main/nersc/python/3.9-anaconda-2021.11/Dockerfile
-FROM docker.io/library/ubuntu:latest
-WORKDIR /opt
+# Use a modern PyTorch image with CUDA support
+FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
 
-RUN \
-    apt-get update && apt-get install --yes \
-    build-essential \
-    gfortran \
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     git \
-    wget \
-    libgl1 libegl1 libxext6 libsm6 libxrender1 && \
-    apt-get clean all && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# miniforge
-# Download and install the latest Miniforge (comes with Mamba and conda-forge)
-RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O /tmp/miniforge.sh && \
-    bash /tmp/miniforge.sh -b -p /opt/miniconda && \
-    rm /tmp/miniforge.sh
+# Install Python dependencies
+# Using a fixed version for consistency where possible
+RUN pip install --no-cache-dir \
+    segmentation-models-pytorch==0.3.3 \
+    albumentations==1.4.0 \
+    pandas \
+    matplotlib \
+    tqdm \
+    pillow \
+    scikit-image \
+    scikit-learn
 
-# Update PATH environment variable to include Miniforge
-ENV PATH="/opt/miniconda/bin:$PATH"
+# Create directories for data and output
+RUN mkdir -p /app/sample_images /app/output_masks
 
+# Copy inference script and weights
+# Note: Users should ideally mount their own images and weights
+COPY run_inference.py .
+# COPY best_model.pth . 
 
-# Install base packages + dependencies for leaf segmentation notebook
-# PyTorch stack, scipy/scikit-image/pandas/matplotlib/tqdm/Pillow, psutil
-RUN mamba install --yes -c conda-forge -c pytorch -c nvidia \
-    python=3.10 \
-    jupyterlab scipy scikit-learn scikit-image numpy pandas matplotlib tqdm pillow psutil \
-    pytorch torchvision torchaudio pytorch-cuda=12.4 \
-    && mamba clean --all -f -y
+# Set environmental variables
+ENV PYTHONUNBUFFERED=1
 
-# Install leaf-segmentation-specific pip packages
-RUN pip install \
-    segmentation-models-pytorch \
-    albumentations \
-    wandb
-
-# for NERSC jupyterhub environment
-RUN pip install batchspawner
-ENV NERSC_JUPYTER_IMAGE=YES
-
-# expected by entrypoint script
-RUN mkdir -p /alsuser /alsdata
-
-WORKDIR /alsuser
+# Default command: run inference
+# Expects images in /app/sample_images and weights at /app/best_model.pth
+CMD ["python", "run_inference.py"]
