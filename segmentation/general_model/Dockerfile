@@ -30,15 +30,10 @@ RUN mamba install --yes -c conda-forge -c astra-toolbox -c simpleitk -c pytorch 
     opencv matplotlib vtk pytorch torchvision torchaudio pytorch-cuda=12.4 \
     && mamba clean --all -f -y
 
-# Install Detectron2 (requires pytorch)
-RUN python -m pip install --no-build-isolation 'git+https://github.com/facebookresearch/detectron2.git'
+# Install Dependencies
+RUN python -m pip install opencv-python astra-toolbox vtk jupyter ipykernel tifffile ipywidgets
 
 # # install SYRIS
-# COPY syris syris
-# # RUN git clone git@github.com:ufo-kit/syris.git
-# RUN conda install -c conda-forge -y cmake pybind11 -- the NERSC docs say something about not using cmake
-# RUN cd syris && pip install -r requirements.txt && pip install .
-# RUN rm -fR syris
 
 
 # for NERSC jupyterhub environment

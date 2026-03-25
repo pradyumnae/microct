@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-# Using a fixed version for consistency where possible
+# Install Python dependencies for segmentation and Jupyter
 RUN pip install --no-cache-dir \
     segmentation-models-pytorch==0.3.3 \
     albumentations==1.4.0 \
@@ -21,19 +20,19 @@ RUN pip install --no-cache-dir \
     tqdm \
     pillow \
     scikit-image \
-    scikit-learn
+    scikit-learn \
+    ipywidgets \
+    jupyterlab
 
-# Create directories for data and output
-RUN mkdir -p /app/sample_images /app/output_masks
+# Copy the notebook into the container
+COPY leaf_segmentation.ipynb .
+# COPY run_inference.py . # Keeping this for reference if needed
 
-# Copy inference script and weights
-# Note: Users should ideally mount their own images and weights
-COPY run_inference.py .
-# COPY best_model.pth . 
-
-# Set environmental variables
+# Set environment variables
 ENV PYTHONUNBUFFERED=1
 
-# Default command: run inference
-# Expects images in /app/sample_images and weights at /app/best_model.pth
-CMD ["python", "run_inference.py"]
+# Expose Jupyter port
+EXPOSE 8888
+
+# Default command: Start Jupyter Lab
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser", "--allow-root"]
