@@ -14,10 +14,16 @@ env:
 
 jobs:
   build-and-push-image:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: general
+            context: ./segmentation/general_model
+            file: ./segmentation/general_model/Dockerfile
+          - name: leaf
+            context: ./segmentation/leaf_segmentation
+            file: ./segmentation/leaf_segmentation/Dockerfile
 
     steps:
     - name: Checkout repository
@@ -36,7 +42,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.name }}
         tags: |
           type=sha
           type=raw,value=latest
@@ -44,8 +50,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       with:
-        context: ./segmentation
-        file: ./segmentation/Dockerfile
+        context: ${{ matrix.context }}
+        file: ${{ matrix.file }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
