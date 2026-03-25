@@ -33,6 +33,10 @@ RUN mamba install --yes -c conda-forge -c astra-toolbox -c simpleitk -c pytorch 
 # Install Dependencies
 RUN python -m pip install opencv-python astra-toolbox vtk jupyter ipykernel tifffile ipywidgets
 
+# Download model weights from GitHub Release (bypassing LFS)
+RUN mkdir -p /opt/segmentation && \
+    wget -L https://github.com/pradyumnae/microct/releases/download/v0.0.1-weights/pytorch_model.pth -O /opt/segmentation/pytorch_model.pth
+
 # # install SYRIS
 
 
